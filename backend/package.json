@@ -1,0 +1,26 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Jenny-Taranto/Projet6#readme",
+  "bugs": {
+    "url": "https://github.com/Jenny-Taranto/Projet6/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jenny-Taranto/Projet6.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "bcrypt": "^5.1.1",
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.13.1"
+  }
+}
