@@ -6,7 +6,7 @@ const auth = require('../middleware/auth')
 const stuffCtrl = require('../controllers/stuff')
 
 
-router.post('/', auth,stuffCtrl.createBook);
+router.post('/', auth, stuffCtrl.createBook);
 router.get('/:id', stuffCtrl.getOneBook);
 router.put('/:id', auth, stuffCtrl.modifyBook);
 router.delete('/:id', auth, stuffCtrl.deleteBook);
