@@ -1,15 +1,29 @@
 const Book = require('../models/book')
 
 exports.createBook = (req, res, next) => {
-    console.log("Données reçues :", req.body);
-    delete req.body._id;
-    const book = new Book({
-        ...req.body
-    });
-    book.save()
+    try {
+      // Récupérer les données envoyées sous forme de string JSON
+      const bookObject = JSON.parse(req.body.book);
+  
+      // Supprimer l'ID si jamais il est présent (généré par MongoDB)
+      delete bookObject._id;
+  
+      // Créer l'URL de l'image (sauvegardée via multer)
+      const url = `${req.protocol}://${req.get('host')}`;
+  
+      // Créer une nouvelle instance de Book
+      const book = new Book({
+        ...bookObject,
+        imageUrl: `${url}/pictures/${req.file.filename}`,
+      });
+  
+      book.save()
         .then(() => res.status(201).json({ message: 'Livre enregistré !' }))
         .catch(error => res.status(400).json({ error }));
-}
+    } catch (error) {
+      res.status(500).json({ error: 'Erreur lors de la création du livre.' });
+    }
+  };
 
 exports.getOneBook = (req, res, next) => {
     Book.findOne({ _id: req.params.id })

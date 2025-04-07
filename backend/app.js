@@ -1,8 +1,8 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const Book = require('./models/book');
 const stuffRoutes = require('./routes/stuff');
 const userRoutes = require('./routes/user');
+const path = require('path');
 
 const app = express();
 
@@ -24,6 +24,7 @@ app.use((req, res, next) => {
   next();
 });
 
+app.use('/pictures', express.static(path.join(__dirname, 'pictures')));
 app.use('/api/books', stuffRoutes);
 app.use('/api/auth', userRoutes)
 
