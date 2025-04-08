@@ -11,6 +11,7 @@ router.get('/:id', stuffCtrl.getOneBook);
 router.put('/:id', auth, stuffCtrl.modifyBook);
 router.delete('/:id', auth, stuffCtrl.deleteBook);
 router.get('/', stuffCtrl.getAllStuff);
+router.post('/:id/rating', auth, stuffCtrl.rateBook)
 
 
 
