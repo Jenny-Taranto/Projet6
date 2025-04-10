@@ -61,6 +61,7 @@ function BookForm({ book, validate }) {
         alert(newBook.message);
       }
     } else {
+      console.log(data);
       const updatedBook = await updateBook(data, data.id);
       if (!updatedBook.error) {
         navigate('/');
