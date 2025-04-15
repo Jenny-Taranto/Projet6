@@ -1,5 +1,6 @@
 const Book = require('../models/book')
 const sharp = require('sharp');
+const path = require('path');
 
 exports.createBook = (req, res, next) => {
   try {
@@ -32,6 +33,7 @@ exports.createBook = (req, res, next) => {
       .then(() => res.status(201).json({ message: 'Livre enregistré !' }))
       .catch(error => res.status(400).json({ error }));
   } catch (error) {
+    console.log(error)
     res.status(500).json({ error: 'Erreur lors de la création du livre.' });
   }
 }
@@ -127,4 +129,16 @@ exports.rateBook = (req, res, next) => {
       console.error(error);
       res.status(500).json({ error: 'Erreur lors de la notation du livre' });
     })
+}
+
+exports.bestRating = async (req, res, next) => {
+  try {
+    const books = await Book.find()
+      .sort({ rating: -1 }) // Tri décroissant
+      .limit(3); // Limite à 3 résultats
+    console.log(books);
+    res.status(200).json(books)
+  } catch (error) {
+    res.status(500).json({ error : 'Erreur lors de la récupération des livres'});
+  }
 }
