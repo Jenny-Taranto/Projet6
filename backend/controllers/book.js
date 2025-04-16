@@ -7,36 +7,42 @@ exports.createBook = (req, res, next) => {
     // Récupérer les données envoyées sous forme de string JSON
     const bookObject = JSON.parse(req.body.book);
 
-    // Supprimer l'ID généré automatiquement par MongoDB pour éviter de créer des conflits, s'il existe
+    // Supprimer l'ID généré automatiquement par MongoDB pour éviter de créer des conflits
     delete bookObject._id;
 
-    // Créer le nom de fichier pour l'image optimisée
+    // Créer un nom de fichier pour l'image optimisée
     const filename = `${Date.now()}-${req.file.originalname.split(' ').join('_')}.jpg`;
-    const outputPath = path.join('pictures', filename);
+    const outputPath = path.join(__dirname, '..', 'pictures', filename); // Utiliser le chemin absolu
 
-    // Compression et redimensionnement de l'image avec sharp
+    // Utiliser sharp pour redimensionner et compresser l'image
     sharp(req.file.buffer)
       .resize({ width: 536 }) // Redimensionner si l'image est trop grande
       .jpeg({ quality: 70 })  // Compresser l'image avec une qualité de 70%
-      .toFile(outputPath);    // Sauvegarder l'image sur le disque
+      .toFile(outputPath)     // Sauvegarder l'image sur le disque
+      .then(() => {
+        // Construire l'URL de l'image après traitement
+        const url = `${req.protocol}://${req.get('host')}`;
 
-    // Construire l'URL de base du serveur (http://localhost:3000 ou https://monsite.com par ex)
-    const url = `${req.protocol}://${req.get('host')}`;
+        // Créer un nouvel objet Book avec l'URL de l'image
+        const book = new Book({
+          ...bookObject,
+          imageUrl: `${url}/pictures/${filename}`, // L'URL vers l'image stockée sur le disque
+        });
 
-    // Créer un nouvel objet Book à partir des données de bookObject et on ajoute une propriété imageUrl
-    const book = new Book({
-      ...bookObject,
-      imageUrl: `${url}/pictures/${req.file.filename}`, //l'url qui renverra vers le fichier dans le dossier Pictures, req.file.filename contient le nom du fichier image fourni par multer
-    });
-
-    book.save() //Sauvegarde du livre dans la base de données MongoDB
-      .then(() => res.status(201).json({ message: 'Livre enregistré !' }))
-      .catch(error => res.status(400).json({ error }));
+        // Sauvegarder le livre dans la base de données
+        book.save()
+          .then(() => res.status(201).json({ message: 'Livre enregistré !' }))
+          .catch(error => res.status(400).json({ error }));
+      })
+      .catch(error => {
+        console.error(error);
+        res.status(500).json({ error: 'Erreur lors du traitement de l\'image' });
+      });
   } catch (error) {
-    console.log(error)
+    console.log(error);
     res.status(500).json({ error: 'Erreur lors de la création du livre.' });
   }
-}
+};
 
 exports.getOneBook = (req, res, next) => {
   Book.findOne({ _id: req.params.id })
@@ -131,14 +137,8 @@ exports.rateBook = (req, res, next) => {
     })
 }
 
-exports.bestRating = async (req, res, next) => {
-  try {
-    const books = await Book.find()
-      .sort({ rating: -1 }) // Tri décroissant
-      .limit(3); // Limite à 3 résultats
-    console.log(books);
-    res.status(200).json(books)
-  } catch (error) {
-    res.status(500).json({ error : 'Erreur lors de la récupération des livres'});
-  }
+exports.bestRating = (req, res, next) => {
+  Book.find().sort({averageRating: -1}).limit(3)
+  .then((books)=>res.status(200).json(books))
+  .catch((error)=>res.status(500).json({ error: 'Erreur lors de la récupération des livres' }));
 }
