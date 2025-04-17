@@ -11,15 +11,9 @@ exports.createBook = (req, res, next) => {
     delete bookObject._id;
 
     // Créer un nom de fichier pour l'image optimisée
-    const filename = `${Date.now()}-${req.file.originalname.split(' ').join('_')}.jpg`;
-    const outputPath = path.join(__dirname, '..', 'pictures', filename); // Utiliser le chemin absolu
+   
 
-    // Utiliser sharp pour redimensionner et compresser l'image
-    sharp(req.file.buffer)
-      .resize({ width: 536 }) // Redimensionner si l'image est trop grande
-      .jpeg({ quality: 70 })  // Compresser l'image avec une qualité de 70%
-      .toFile(outputPath)     // Sauvegarder l'image sur le disque
-      .then(() => {
+  
         // Construire l'URL de l'image après traitement
         const url = `${req.protocol}://${req.get('host')}`;
 
@@ -33,11 +27,7 @@ exports.createBook = (req, res, next) => {
         book.save()
           .then(() => res.status(201).json({ message: 'Livre enregistré !' }))
           .catch(error => res.status(400).json({ error }));
-      })
-      .catch(error => {
-        console.error(error);
-        res.status(500).json({ error: 'Erreur lors du traitement de l\'image' });
-      });
+    
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: 'Erreur lors de la création du livre.' });
@@ -138,6 +128,7 @@ exports.rateBook = (req, res, next) => {
 }
 
 exports.bestRating = (req, res, next) => {
+  console.log('toto')
   Book.find().sort({averageRating: -1}).limit(3)
   .then((books)=>res.status(200).json(books))
   .catch((error)=>res.status(500).json({ error: 'Erreur lors de la récupération des livres' }));
