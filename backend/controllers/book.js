@@ -10,10 +10,6 @@ exports.createBook = (req, res, next) => {
     // Supprimer l'ID généré automatiquement par MongoDB pour éviter de créer des conflits
     delete bookObject._id;
 
-    // Créer un nom de fichier pour l'image optimisée
-   
-
-  
         // Construire l'URL de l'image après traitement
         const url = `${req.protocol}://${req.get('host')}`;
 
@@ -128,7 +124,6 @@ exports.rateBook = (req, res, next) => {
 }
 
 exports.bestRating = (req, res, next) => {
-  console.log('toto')
   Book.find().sort({averageRating: -1}).limit(3)
   .then((books)=>res.status(200).json(books))
   .catch((error)=>res.status(500).json({ error: 'Erreur lors de la récupération des livres' }));
