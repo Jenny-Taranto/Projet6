@@ -12,11 +12,10 @@ exports.createBook = (req, res, next) => {
 
         // Construire l'URL de l'image après traitement
         const url = `${req.protocol}://${req.get('host')}`;
-
         // Créer un nouvel objet Book avec l'URL de l'image
         const book = new Book({
           ...bookObject,
-          imageUrl: `${url}/pictures/${filename}`, // L'URL vers l'image stockée sur le disque
+          imageUrl: `${url}/pictures/${req.file.filename}`, // L'URL vers l'image stockée sur le disque
         });
 
         // Sauvegarder le livre dans la base de données

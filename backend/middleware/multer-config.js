@@ -10,7 +10,6 @@ const MIME_TYPES = {
   'image/png': 'png'
 };
 
-//module.exports = multer({ storage }).single('image');
 module.exports = (req, res, next) => {
   const config = {
     fileFilter: (req, file, cb) => {
@@ -56,7 +55,7 @@ module.exports = (req, res, next) => {
         .toFile(outputPath)     // Sauvegarder l'image sur le disque
 
       req.file.filename = filename;
-
+      console.log(req.file.filename)
       next()
     }
     catch (error) {
