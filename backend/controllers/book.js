@@ -1,6 +1,7 @@
 const Book = require('../models/book')
 const sharp = require('sharp');
 const path = require('path');
+const fs = require('fs');
 
 exports.createBook = (req, res, next) => {
   try {
@@ -36,51 +37,72 @@ exports.getOneBook = (req, res, next) => {
 }
 
 exports.modifyBook = (req, res, next) => {
-  const userId = req.auth.userId; //On récupère le userId du token
+  const userId = req.auth.userId;
 
-  Book.findOne({ _id: req.params.id }) //On récupère le livre dans la base de données
+  Book.findOne({ _id: req.params.id })
     .then(book => {
       if (!book) {
         return res.status(404).json({ message: 'Livre non trouvé' });
       }
 
       if (book.userId !== userId) {
-        return res.status(403).json({ message: 'Accès non autorisé' }); //On compare les userId
+        return res.status(403).json({ message: 'Accès non autorisé' });
       }
 
-      const updatedBook = req.file
-        ? {
-          ...JSON.parse(req.body.book), //On décode les données JSON
-          imageUrl: `${req.protocol}://${req.get('host')}/pictures/${req.file.filename}` //On met à jour le champ imageUrl avec le nouveau nom de fichier
-        }
-        : { ...req.body }; //Si pas de nouvelle image, on prend juste le corps de la requête comme nouvelles données
+      let updatedBook;
 
-      return Book.updateOne({ _id: req.params.id }, { ...updatedBook, _id: req.params.id }).then(() =>
-        res.status(200).json({ message: 'Livre modifié avec succès' })
-      );
+      if (req.file) {
+        // ✅ Supprimer l’ancienne image
+        const oldFilename = book.imageUrl.split('/pictures/')[1];
+        const oldImagePath = path.join(__dirname, '..', 'pictures', oldFilename);
+        fs.unlink(oldImagePath, (err) => {
+          if (err) console.error('Erreur lors de la suppression de l’ancienne image :', err);
+        });
+
+        updatedBook = {
+          ...JSON.parse(req.body.book),
+          imageUrl: `${req.protocol}://${req.get('host')}/pictures/${req.file.filename}`,
+        };
+      } else if (req.body.book) {
+        updatedBook = JSON.parse(req.body.book);
+      } else {
+        updatedBook = req.body;
+      }
+
+      return Book.updateOne({ _id: req.params.id }, { ...updatedBook, _id: req.params.id })
+        .then(() => res.status(200).json({ message: 'Livre modifié avec succès' }))
+        .catch(error => res.status(400).json({ error }));
     })
     .catch(error => res.status(500).json({ error }));
-}
+};
 
 exports.deleteBook = (req, res, next) => {
-  const userId = req.auth.userId; //On récupère le userId du token
+  const userId = req.auth.userId;
 
-  Book.findOne({ _id: req.params.id }) //On récupère le livre dans la base de données
+  Book.findOne({ _id: req.params.id })
     .then(book => {
       if (!book) {
         return res.status(404).json({ message: 'Livre non trouvé' });
       }
 
       if (book.userId !== userId) {
-        return res.status(403).json({ message: 'Accès non autorisé' }); //On compare les userId
+        return res.status(403).json({ message: 'Accès non autorisé' });
       }
 
-      return Book.deleteOne({ _id: req.params.id }).then(() =>
-        res.status(200).json({ message: 'Livre supprimé avec succès' })
-      );
+      const filename = book.imageUrl.split('/pictures/')[1];
+      const imagePath = path.join(__dirname, '..', 'pictures', filename);
+
+      // ✅ Supprimer l’image physique
+      fs.unlink(imagePath, (err) => {
+        if (err) console.error('Erreur lors de la suppression de l’image :', err);
+      });
+
+      return Book.deleteOne({ _id: req.params.id })
+        .then(() => res.status(200).json({ message: 'Livre supprimé avec succès' }))
+        .catch(error => res.status(400).json({ error }));
     })
     .catch(error => res.status(500).json({ error }));
-}
+};
 
 exports.getAllBooks = (req, res, next) => {
   Book.find()

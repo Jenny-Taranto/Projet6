@@ -46,20 +46,27 @@ module.exports = (req, res, next) => {
       }
     }
     try {
-      const filename = `${Date.now()}-${req.file.originalname.split(' ').join('_')}.jpg`;
-      const outputPath = path.join(__dirname, '..', 'pictures', filename); // Utiliser le chemin absolu
-      // Utiliser sharp pour redimensionner et compresser l'image
-      await sharp(req.file.buffer)
-        .resize({ width: 536 }) // Redimensionner si l'image est trop grande
-        .jpeg({ quality: 70 })  // Compresser l'image avec une qualité de 70%
-        .toFile(outputPath)     // Sauvegarder l'image sur le disque
-
-      req.file.filename = filename;
-      console.log(req.file.filename)
-      next()
+      if (!req.file) {
+        return next(); // Aucune image => on continue sans traitement d'image
+      }
+      
+      try {
+        const filename = `${Date.now()}-${req.file.originalname.split(' ').join('_')}.jpg`;
+        const outputPath = path.join(__dirname, '..', 'pictures', filename);
+      
+        await sharp(req.file.buffer)
+          .resize({ width: 536 })
+          .jpeg({ quality: 70 })
+          .toFile(outputPath);
+      
+        req.file.filename = filename;
+        next();
+      } catch (error) {
+        return res.status(400).json({ message: error.message });
+      }
     }
     catch (error) {
-      res.status(400).json({ message: err.message });
+      res.status(400).json({ message: error.message });
       return;
     }
   })
